@@ -10,11 +10,6 @@
 
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
         integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-
-    <link rel='stylesheet' href='extension/styles/overlay.css'>
-    <script src="extension/fakeapi.js"></script>
-    <script src="extension/inpage.js"></script>
-    <script src="extension/background.js"></script>
 </head>
 
 <body class="row mx-md-n5">
@@ -132,8 +127,6 @@
         <footer class="container">
             <p>&copy; Dapplets 2019-2020</p>
         </footer>
-        <!-- <div><iframe style="display: none;" src="extension/em_background.html" name='background' width='500' height="50"></iframe></div> -->
-        <!-- <div><iframe src="extension/em_popup.html" name='popup' width='500' height="500"></iframe></div> -->
     </div>
 
     <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
@@ -145,6 +138,8 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
         integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
         crossorigin="anonymous"></script>
+
+    <script src="node_modules/@dapplets/dapplet-jslib/lib/dapplet-jslib.js"></script>
     <script>
         document.getElementById('tryDappletsButton').onclick = () => {
             browser.runtime.sendMessage('TOGGLE_OVERLAY')
