@@ -1,0 +1,29 @@
+.custom-switch-lg {
+    padding-left: 5.5rem;
+    min-height: 2.5rem;
+}
+
+.custom-switch-lg .custom-control-label {
+    line-height: 2.5rem;
+    font-size: 20px;
+}
+
+.custom-switch-lg .custom-control-label::before {
+    left: -5.5rem;
+    width: 4.75rem;
+    border-radius: 6.5rem;
+    height: 2rem;
+}
+
+.custom-switch-lg .custom-control-label::after {
+    width: calc(2rem - 4px);
+    height: calc(2rem - 4px);
+    border-radius: 1rem;
+    left: calc(-5.5rem + 2px);
+}
+
+.custom-switch-lg .custom-control-input:checked~.custom-control-label::after {
+    background-color: #fff;
+    -webkit-transform: translateX(2.75rem);
+    transform: translateX(2.75rem);
+}

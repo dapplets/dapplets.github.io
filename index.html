@@ -28,6 +28,7 @@
 
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
         integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
@@ -51,8 +52,13 @@
                 <h1 class="text-center">Dapplets</h1>
                 <p class="text-center" style="font-size: 20px;">Dapplets is a protocol for permissionless,
                     decentralized and unstoppable Augmented Web.</p>
-                <button id="tryDappletsButton" type="button" class="btn btn-primary  btn-lg mx-auto"
-                    style="width: 250px; display: block; margin-top: 40px;">Try now!</button>
+                <!-- <button id="tryDappletsButton" type="button" class="btn btn-primary  btn-lg mx-auto"
+                    style="width: 250px; display: block; margin-top: 40px;">Try now!</button> -->
+                <div class="custom-control custom-switch custom-switch-lg mx-auto"
+                    style="display: table; margin-top: 40px;">
+                    <input type="checkbox" class="custom-control-input" id="tryDappletsSwitch">
+                    <label class="custom-control-label" for="tryDappletsSwitch">Try now!</label>
+                </div>
                 <p style="margin-top: 20px;" class="text-center text-danger">You need to install the <a
                         class="text-danger" style="text-decoration: underline;"
                         href="https://github.com/dapplets/dapplet-extension/releases">browser extension</a> to use
@@ -162,16 +168,29 @@
 
     <script src="https://unpkg.com/@dapplets/dapplet-jslib/lib/dapplet-jslib.min.js"></script>
     <script>
-        document.getElementById('tryDappletsButton').onclick = () => {
-            browser.runtime.sendMessage({
-                "handler": "__CHROME_EXTENSION_TOOLKIT__",
-                "type": "__INVOKE_FUNCTION__",
-                "payload": {
-                    "path": ["activateFeature"],
-                    "args": ["dapplets-org-feature-1.dapplet-base.eth", "0.1.1", [window.location.hostname]]
-                }
-            });
-            browser.runtime.sendMessage('TOGGLE_OVERLAY');
+        document.getElementById('tryDappletsSwitch').onchange = (e) => {
+            const checked = e.target.checked;
+            if (checked) {
+                browser.runtime.sendMessage({
+                    "handler": "__CHROME_EXTENSION_TOOLKIT__",
+                    "type": "__INVOKE_FUNCTION__",
+                    "payload": {
+                        "path": ["activateFeature"],
+                        "args": ["dapplets-org-feature-1.dapplet-base.eth", "0.1.1", [window.location.hostname]]
+                    }
+                });
+                browser.runtime.sendMessage('TOGGLE_OVERLAY');
+            } else {
+                browser.runtime.sendMessage({
+                    "handler": "__CHROME_EXTENSION_TOOLKIT__",
+                    "type": "__INVOKE_FUNCTION__",
+                    "payload": {
+                        "path": ["deactivateFeature"],
+                        "args": ["dapplets-org-feature-1.dapplet-base.eth", "0.1.1", [window.location.hostname]]
+                    }
+                });
+                browser.runtime.sendMessage('TOGGLE_OVERLAY');
+            }
         }
     </script>
 
