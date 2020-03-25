@@ -177,7 +177,7 @@
                 "args": [[window.location.hostname]]
             }
         }, ({ result }) => {
-            tryDappletsSwitch.checked = result.length > 0;
+            tryDappletsSwitch.checked = result.filter(f => f.isActive === true).length > 0;
         });
 
         tryDappletsSwitch.onchange = (e) => {
