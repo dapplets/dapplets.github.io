@@ -179,7 +179,7 @@
                         "args": ["dapplets-org-feature-1.dapplet-base.eth", "0.1.1", [window.location.hostname]]
                     }
                 });
-                browser.runtime.sendMessage('TOGGLE_OVERLAY');
+                browser.runtime.sendMessage('OPEN_OVERLAY');
             } else {
                 browser.runtime.sendMessage({
                     "handler": "__CHROME_EXTENSION_TOOLKIT__",
@@ -189,7 +189,7 @@
                         "args": ["dapplets-org-feature-1.dapplet-base.eth", "0.1.1", [window.location.hostname]]
                     }
                 });
-                browser.runtime.sendMessage('TOGGLE_OVERLAY');
+                browser.runtime.sendMessage('CLOSE_OVERLAY');
             }
         }
     </script>
