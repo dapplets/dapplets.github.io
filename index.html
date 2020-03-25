@@ -168,7 +168,19 @@
 
     <script src="https://unpkg.com/@dapplets/dapplet-jslib/lib/dapplet-jslib.min.js"></script>
     <script>
-        document.getElementById('tryDappletsSwitch').onchange = (e) => {
+        const tryDappletsSwitch = document.getElementById('tryDappletsSwitch');
+        browser.runtime.sendMessage({
+            "handler": "__CHROME_EXTENSION_TOOLKIT__",
+            "type": "__INVOKE_FUNCTION__",
+            "payload": {
+                "path": ["getFeaturesByHostnames"],
+                "args": [[window.location.hostname]]
+            }
+        }, ({ result }) => {
+            tryDappletsSwitch.checked = result.length > 0;
+        });
+
+        tryDappletsSwitch.onchange = (e) => {
             const checked = e.target.checked;
             if (checked) {
                 browser.runtime.sendMessage({
