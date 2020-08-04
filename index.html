@@ -82,15 +82,15 @@
                         <h2>Applications</h2>
                         <p>Dapplets protocol enables creation of unstoppable augmentations for third party websites.
                             Here are few ideas:
-                            <ul class="pl-3">
-                                <li>Identity services: messaging & security alerts.</li>
-                                <li>Scam and fake news alerts.</li>
-                                <li>Payments and other crypto-economic addons for existing web communities.</li>
-                            </ul>
-                            <a href="https://github.com/dapplets/dapplet-modules">Learn by example</a>
+                        <ul class="pl-3">
+                            <li>Identity services: messaging & security alerts.</li>
+                            <li>Scam and fake news alerts.</li>
+                            <li>Payments and other crypto-economic addons for existing web communities.</li>
+                        </ul>
+                        <a href="https://github.com/dapplets/dapplet-modules">Learn by example</a>
 
-                            <br /> and <a href="https://github.com/dapplets/dapplet-template">create your own
-                                dapplet!</a>
+                        <br /> and <a href="https://github.com/dapplets/dapplet-template">create your own
+                            dapplet!</a>
                         </p>
                         <!-- <p><a class="btn btn-secondary" href="#" role="button">View details &raquo;</a></p> -->
                     </div>
@@ -121,11 +121,11 @@
                     <div class="col-md-4">
                         <h2>Roadmap</h2>
                         <p>
-                            <ul class="pl-3">
-                                <li>Q1 2020 - Dapplets beta</li>
-                                <li>Q3 2020 - Launch Dapplets & SOWA MVP</li>
-                                <li>Q4 2020 - Launch of community and crypto-economics</li>
-                            </ul>
+                        <ul class="pl-3">
+                            <li>Q1 2020 - Dapplets beta</li>
+                            <li>Q3 2020 - Launch Dapplets & SOWA MVP</li>
+                            <li>Q4 2020 - Launch of community and crypto-economics</li>
+                        </ul>
                         </p>
                         <!-- <p><a class="btn btn-secondary" href="#" role="button">View details &raquo;</a></p> -->
                     </div>
@@ -133,14 +133,14 @@
                         <h2>Community</h2>
                         <p>
                             There are different roles in Dapplets community:
-                            <ol class="pl-3">
-                                <li>CoreDevs are working on the protocol and the platform.</li>
-                                <li>ModuleDevs are implementing modules and website adapters.</li>
-                                <li>AppDevs are implementing own business models.</li>
-                                <li>Auditors verify modules created by developers and signal an
-                                    audit status.</li>
-                                </li>
-                            </ol>
+                        <ol class="pl-3">
+                            <li>CoreDevs are working on the protocol and the platform.</li>
+                            <li>ModuleDevs are implementing modules and website adapters.</li>
+                            <li>AppDevs are implementing own business models.</li>
+                            <li>Auditors verify modules created by developers and signal an
+                                audit status.</li>
+                            </li>
+                        </ol>
                         </p>
                         <!-- <p><a class="btn btn-secondary" href="#" role="button">View details &raquo;</a></p> -->
                     </div>
@@ -168,40 +168,58 @@
 
     <script src="https://unpkg.com/@dapplets/dapplet-extension"></script>
     <script>
-        const tryDappletsSwitch = document.getElementById('tryDappletsSwitch');
-        browser.runtime.sendMessage({
-            "handler": "__CHROME_EXTENSION_TOOLKIT__",
-            "type": "__INVOKE_FUNCTION__",
-            "payload": {
-                "path": ["getFeaturesByHostnames"],
-                "args": [[window.location.hostname]]
+        class DappletsApi {
+            async getFeaturesByHostnames(hostnames) {
+                return this._call("getFeaturesByHostnames", [hostnames]);
             }
-        }, ({ result }) => {
-            tryDappletsSwitch.checked = result.filter(f => f.isActive === true).length > 0;
-        });
 
-        tryDappletsSwitch.onchange = (e) => {
-            const checked = e.target.checked;
-            if (checked) {
-                browser.runtime.sendMessage({
-                    "handler": "__CHROME_EXTENSION_TOOLKIT__",
-                    "type": "__INVOKE_FUNCTION__",
-                    "payload": {
-                        "path": ["activateFeature"],
-                        "args": ["dapplets-org-feature-1.dapplet-base.eth", null, [window.location.hostname]]
-                    }
-                });
+            async activateFeature(name, version, hostnames, order, registryUrl) {
+                return this._call("activateFeature", [name, version, hostnames, order, registryUrl]);
+            }
+
+            async deactivateFeature(name, version, hostnames, order, registryUrl) {
+                return this._call("deactivateFeature", [name, version, hostnames, order, registryUrl]);
+            }
+
+            openOverlay() {
                 browser.runtime.sendMessage('OPEN_OVERLAY');
-            } else {
-                browser.runtime.sendMessage({
-                    "handler": "__CHROME_EXTENSION_TOOLKIT__",
-                    "type": "__INVOKE_FUNCTION__",
-                    "payload": {
-                        "path": ["deactivateFeature"],
-                        "args": ["dapplets-org-feature-1.dapplet-base.eth", null, [window.location.hostname]]
-                    }
-                });
+            }
+
+            closeOverlay() {
                 browser.runtime.sendMessage('CLOSE_OVERLAY');
+            }
+
+            async _call(func, args) {
+                return new Promise((res, rej) => {
+                    browser.runtime.sendMessage({
+                        "handler": "__CHROME_EXTENSION_TOOLKIT__",
+                        "type": "__INVOKE_FUNCTION__",
+                        "payload": {
+                            "path": [func],
+                            "args": args
+                        }
+                    }, ({ result }) => res(result));
+                });
+            }
+        }
+
+        const dappletsApi = new DappletsApi();
+
+        const hostname = (window.location.hostname === "localhost") ? "dapplets.org" : window.location.hostname;
+        const tryDappletsSwitch = document.getElementById('tryDappletsSwitch');
+
+        dappletsApi.getFeaturesByHostnames([hostname]).then(r => tryDappletsSwitch.checked = r.filter(f => f.isActive === true).length > 0);
+
+        tryDappletsSwitch.onchange = async (e) => {
+            const modules = await dappletsApi.getFeaturesByHostnames([hostname]);
+            const features = modules.filter(m => m.type === "FEATURE");
+
+            if (e.target.checked) {
+                features.forEach(f => dappletsApi.activateFeature(f.name, null, [hostname], f.order, f.sourceRegistry.url));
+                dappletsApi.openOverlay();
+            } else {
+                features.forEach(f => dappletsApi.deactivateFeature(f.name, null, [hostname], f.order, f.sourceRegistry.url));
+                dappletsApi.closeOverlay();
             }
         }
     </script>
