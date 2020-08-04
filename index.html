@@ -188,7 +188,7 @@
                     "type": "__INVOKE_FUNCTION__",
                     "payload": {
                         "path": ["activateFeature"],
-                        "args": ["dapplets-org-feature-1.dapplet-base.eth", "0.1.3", [window.location.hostname]]
+                        "args": ["dapplets-org-feature-1.dapplet-base.eth", null, [window.location.hostname]]
                     }
                 });
                 browser.runtime.sendMessage('OPEN_OVERLAY');
@@ -198,7 +198,7 @@
                     "type": "__INVOKE_FUNCTION__",
                     "payload": {
                         "path": ["deactivateFeature"],
-                        "args": ["dapplets-org-feature-1.dapplet-base.eth", "0.1.3", [window.location.hostname]]
+                        "args": ["dapplets-org-feature-1.dapplet-base.eth", null, [window.location.hostname]]
                     }
                 });
                 browser.runtime.sendMessage('CLOSE_OVERLAY');
