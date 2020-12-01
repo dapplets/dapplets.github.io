@@ -54,10 +54,20 @@
                     decentralized and unstoppable Augmented Web.</p>
                 <!-- <button id="tryDappletsButton" type="button" class="btn btn-primary  btn-lg mx-auto"
                     style="width: 250px; display: block; margin-top: 40px;">Try now!</button> -->
-                <div class="custom-control custom-switch custom-switch-lg mx-auto"
-                    style="display: table; margin-top: 40px;">
-                    <input type="checkbox" class="custom-control-input" id="tryDappletsSwitch">
-                    <label class="custom-control-label" for="tryDappletsSwitch">Try now!</label>
+                <div id="tryDappletsSwitchContainer" style="display: none;">
+                    <div class="custom-control custom-switch custom-switch-lg mx-auto"
+                        style="display: table; margin-top: 40px;">
+                        <input type="checkbox" class="custom-control-input" id="tryDappletsSwitch">
+                        <label class="custom-control-label" for="tryDappletsSwitch">Try now!</label>
+                    </div>
+                </div>
+                <div id="tryDappletsLoadingContainer">
+                    <div class="d-flex justify-content-center" style="margin-top: 40px;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                        <span style="margin-left: 10px; line-height: 30px;">Loading...</span>
+                    </div>
                 </div>
                 <p style="margin-top: 20px;" class="text-center text-danger">You need to install the <a
                         class="text-danger" style="text-decoration: underline;"
@@ -166,9 +176,15 @@
         integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
         crossorigin="anonymous"></script>
 
-    <script src="https://unpkg.com/@dapplets/dapplet-extension"></script>
+    <!-- <script src="https://unpkg.com/@dapplets/dapplet-extension"></script> -->
     <script>
         class DappletsApi {
+            _hostname = null;
+
+            constructor(hostname) {
+                this._hostname = hostname;
+            }
+
             async getFeaturesByHostnames(hostnames) {
                 return this._call("getFeaturesByHostnames", [hostnames]);
             }
@@ -200,27 +216,84 @@
                 });
                 return response.result;
             }
-        }
 
-        const dappletsApi = new DappletsApi();
+            async injectLibrary() {
+                return new Promise((res, rej) => {
+                    try {
+                        (function (d, s, id) {
+                            var js, fjs = d.getElementsByTagName(s)[0];
+                            if (d.getElementById(id)) {
+                                res();
+                                return;
+                            }
+                            js = d.createElement(s); js.id = id;
+                            js.onload = function () {
+                                res();
+                            };
+                            js.src = "https://unpkg.com/@dapplets/dapplet-extension";
+                            //js.src = "node_modules/@dapplets/dapplet-extension/lib/index.min.js";
+                            fjs.parentNode.insertBefore(js, fjs);
+                        }(document, 'script', 'dapplets-jslib'));
+                    } catch (err) {
+                        rej(err);
+                    }
+                });
+            }
 
-        const hostname = (window.location.hostname === "localhost") ? "dapplets.org" : window.location.hostname;
-        const tryDappletsSwitch = document.getElementById('tryDappletsSwitch');
+            async activateAllFeatures() {
+                const modules = await this.getFeaturesByHostnames([this._hostname]);
+                const features = modules.filter(m => m.type === "FEATURE");
+                await Promise.all(features.map(f => this.activateFeature(f.name, null, [this._hostname], f.order, f.sourceRegistry.url)));
+            }
 
-        dappletsApi.getFeaturesByHostnames([hostname]).then(r => tryDappletsSwitch.checked = r.filter(f => f.isActive === true).length > 0);
-
-        tryDappletsSwitch.onchange = async (e) => {
-            const modules = await dappletsApi.getFeaturesByHostnames([hostname]);
-            const features = modules.filter(m => m.type === "FEATURE");
-
-            if (e.target.checked) {
-                features.forEach(f => dappletsApi.activateFeature(f.name, null, [hostname], f.order, f.sourceRegistry.url));
-                dappletsApi.openOverlay();
-            } else {
-                features.forEach(f => dappletsApi.deactivateFeature(f.name, null, [hostname], f.order, f.sourceRegistry.url));
-                dappletsApi.closeOverlay();
+            async deactivateAllFeatures() {
+                const modules = await this.getFeaturesByHostnames([this._hostname]);
+                const features = modules.filter(m => m.type === "FEATURE");
+                await Promise.all(features.map(f => this.deactivateFeature(f.name, null, [this._hostname], f.order, f.sourceRegistry.url)));
             }
         }
+
+        const dappletsApi = new DappletsApi("dapplets.org");
+        const tryDappletsSwitch = document.getElementById('tryDappletsSwitch');
+        const tryDappletsSwitchContainer = document.getElementById('tryDappletsSwitchContainer');
+        const tryDappletsLoadingContainer = document.getElementById('tryDappletsLoadingContainer');
+
+        tryDappletsLoadingContainer.style.display = 'none';
+        tryDappletsSwitchContainer.style.display = null;
+
+        if (localStorage['activated'] === 'true') {
+            tryDappletsSwitch.checked = true;
+            changeHandler(true);
+        }
+
+        async function changeHandler(checked) {
+            if (checked) {
+                tryDappletsLoadingContainer.style.display = null;
+                tryDappletsSwitchContainer.style.display = 'none';
+
+                await dappletsApi.injectLibrary();
+                await dappletsApi.activateAllFeatures();
+                dappletsApi.openOverlay();
+
+                localStorage['activated'] = 'true';
+
+                tryDappletsLoadingContainer.style.display = 'none';
+                tryDappletsSwitchContainer.style.display = null;
+            } else {
+                tryDappletsLoadingContainer.style.display = null;
+                tryDappletsSwitchContainer.style.display = 'none';
+
+                dappletsApi.closeOverlay();
+                await dappletsApi.deactivateAllFeatures();
+
+                localStorage['activated'] = 'false';
+
+                tryDappletsLoadingContainer.style.display = 'none';
+                tryDappletsSwitchContainer.style.display = null;
+            }
+        }
+
+        tryDappletsSwitch.onchange = (e) => changeHandler(e.target.checked);
     </script>
 
 </body>
