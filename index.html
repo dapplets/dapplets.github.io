@@ -190,16 +190,15 @@
             }
 
             async _call(func, args) {
-                return new Promise((res, rej) => {
-                    browser.runtime.sendMessage({
-                        "handler": "__CHROME_EXTENSION_TOOLKIT__",
-                        "type": "__INVOKE_FUNCTION__",
-                        "payload": {
-                            "path": [func],
-                            "args": args
-                        }
-                    }, ({ result }) => res(result));
+                const response = await browser.runtime.sendMessage({
+                    "handler": "__CHROME_EXTENSION_TOOLKIT__",
+                    "type": "__INVOKE_FUNCTION__",
+                    "payload": {
+                        "path": [func],
+                        "args": args
+                    }
                 });
+                return response.result;
             }
         }
 
