@@ -252,6 +252,11 @@
                 const features = modules.filter(m => m.type === "FEATURE");
                 await Promise.all(features.map(f => this.deactivateFeature(f.name, null, [this._hostname], f.order, f.sourceRegistry.url)));
             }
+
+            isExtensionInstalled() {
+                const elements = document.getElementsByTagName('dapplets-overlay-manager');
+                return elements.length > 0;
+            }
         }
 
         const dappletsApi = new DappletsApi("dapplets.org");
@@ -259,42 +264,55 @@
         const tryDappletsSwitchContainer = document.getElementById('tryDappletsSwitchContainer');
         const tryDappletsLoadingContainer = document.getElementById('tryDappletsLoadingContainer');
 
-        tryDappletsLoadingContainer.style.display = 'none';
-        tryDappletsSwitchContainer.style.display = null;
+        // wait when "dapplets-overlay-manager" is injected
+        setTimeout(() => {
+            tryDappletsLoadingContainer.style.display = 'none';
+            tryDappletsSwitchContainer.style.display = null;
 
-        if (localStorage['activated'] === 'true') {
-            tryDappletsSwitch.checked = true;
-            changeHandler(true);
-        }
-
-        async function changeHandler(checked) {
-            if (checked) {
-                tryDappletsLoadingContainer.style.display = null;
-                tryDappletsSwitchContainer.style.display = 'none';
-
-                await dappletsApi.injectLibrary();
-                await dappletsApi.activateAllFeatures();
-                dappletsApi.openOverlay();
-
-                localStorage['activated'] = 'true';
-
-                tryDappletsLoadingContainer.style.display = 'none';
-                tryDappletsSwitchContainer.style.display = null;
-            } else {
-                tryDappletsLoadingContainer.style.display = null;
-                tryDappletsSwitchContainer.style.display = 'none';
-
-                dappletsApi.closeOverlay();
-                await dappletsApi.deactivateAllFeatures();
-
-                localStorage['activated'] = 'false';
-
-                tryDappletsLoadingContainer.style.display = 'none';
-                tryDappletsSwitchContainer.style.display = null;
+            if (localStorage['activated'] === 'true') {
+                tryDappletsSwitch.checked = true;
+                changeHandler(true);
             }
-        }
 
-        tryDappletsSwitch.onchange = (e) => changeHandler(e.target.checked);
+            async function changeHandler(checked) {
+                if (dappletsApi.isExtensionInstalled()) {
+                    if (checked) {
+                        window.postMessage({ type: "OPEN_POPUP_OVERLAY", payload: { path: 'dapplets' } }, '*');
+                    } else {
+                        window.postMessage({ type: "CLOSE_OVERLAY" }, '*');
+                    }
+                } else {
+                    if (checked) {
+                        tryDappletsLoadingContainer.style.display = null;
+                        tryDappletsSwitchContainer.style.display = 'none';
+
+                        await dappletsApi.injectLibrary();
+                        await dappletsApi.activateAllFeatures();
+                        dappletsApi.openOverlay();
+
+                        localStorage['activated'] = 'true';
+
+                        tryDappletsLoadingContainer.style.display = 'none';
+                        tryDappletsSwitchContainer.style.display = null;
+                    } else {
+                        tryDappletsLoadingContainer.style.display = null;
+                        tryDappletsSwitchContainer.style.display = 'none';
+
+                        dappletsApi.closeOverlay();
+                        await dappletsApi.deactivateAllFeatures();
+
+                        localStorage['activated'] = 'false';
+
+                        tryDappletsLoadingContainer.style.display = 'none';
+                        tryDappletsSwitchContainer.style.display = null;
+                    }
+                }
+            }
+
+            tryDappletsSwitch.onchange = (e) => changeHandler(e.target.checked);
+            
+        }, 1000);
+
     </script>
 
 </body>
